@@ -1,7 +1,7 @@
 import json
 import tkinter as tk
 from tkinter import ttk
-
+from config import *
 
 # 加密函数
 def encrypt_value(value, yq, data_key):
@@ -111,6 +111,8 @@ def pvz_json_key_value_update_data(json_data, json_key, json_value, encrypt = Fa
 
     if json_key in json_data:
         data_key = json_key
+        if json_key == '打败boss':
+            update_value = {mode: achievements[mode] for mode in json_value}
         json_data[json_key] = update_value
     else:
         data_key = next(iter(json_data['继续']))
@@ -120,3 +122,10 @@ def pvz_json_key_value_update_data(json_data, json_key, json_value, encrypt = Fa
     return json_data
 
 
+def print_layout(widget, level=0):
+    # 打印当前控件的信息
+    print(' ' * level * 2, widget.winfo_class(), 'Manager:', widget.winfo_manager(), 'Geometry:', widget.winfo_geometry())
+    # 如果当前控件是容器，递归打印其子控件的信息
+    if widget.winfo_children():
+        for child in widget.winfo_children():
+            print_layout(child, level + 1)

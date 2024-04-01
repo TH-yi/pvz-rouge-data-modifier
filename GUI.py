@@ -91,9 +91,15 @@ class AppGUI:
         edit_button = tk.Button(self.root, text="编辑存档", command=self.create_secondary_window_modify_json)
         edit_button.grid(row=1, column=0, sticky=tk.W+tk.E)
 
+    def on_frame_configure(self, canvas):
+        '''重置画布的滚动区域以包含当前所有子组件'''
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+
     def create_secondary_window_modify_json(self):
         self.secondary_window_modify_json = Toplevel(self.root)
         self.secondary_window_modify_json.title("修改存档数据")
+        self.secondary_window_modify_json.geometry("650x750")
         self.secondary_window_modify_json.iconbitmap(default=icon_path)
         # 初始化存储控件变量的字典
         entries = {}  # 对于Entry控件
@@ -102,6 +108,27 @@ class AppGUI:
         combobox_vars = {}  # 对于Combobox控件
         current_row = 0
         column_span = 2 # 定义功能按钮span
+
+        onekey_cheat_button = tk.Button(self.secondary_window_modify_json, text="一键修改",
+                                        command=lambda: self.onekey_cheat(entries, radiobutton_vars, checkbox_vars,
+                                                                          combobox_vars))
+        onekey_cheat_button.grid(row=current_row, column=0, columnspan=column_span, sticky=tk.W + tk.E)
+
+        apply_button = tk.Button(self.secondary_window_modify_json, text="应用修改",
+                                 command=lambda: self.apply_changes_to_json(entries, radiobutton_vars, checkbox_vars,
+                                                                            combobox_vars))
+        apply_button.grid(row=current_row, column=2, columnspan=column_span, sticky=tk.W + tk.E)
+
+        combined_button = tk.Button(self.secondary_window_modify_json, text="保存并重启游戏",
+                                    command=lambda: self.save_and_restart(entries, radiobutton_vars, checkbox_vars,
+                                                                          combobox_vars))
+        combined_button.grid(row=current_row, column=4, columnspan=column_span, sticky=tk.W + tk.E)
+
+        cancel_button = tk.Button(self.secondary_window_modify_json, text="取消",
+                                  command=self.secondary_window_modify_json.destroy)
+        cancel_button.grid(row=current_row, column=6, columnspan=column_span, sticky=tk.W + tk.E)
+
+        current_row = current_row + 1
 
         entries['尸首数'] , current_row = create_textarea_widget(self.secondary_window_modify_json, '尸首数', self.json_data,
                                '尸首数', current_row, 0, True)
@@ -113,10 +140,10 @@ class AppGUI:
                                4, current_row, 0, True)
         entries[5], current_row  = create_textarea_widget(self.secondary_window_modify_json, '钱', self.json_data,
                                5, current_row, 0, True)
-        entries[8], current_row  = create_textarea_widget(self.secondary_window_modify_json, '防守', self.json_data,
+        '''entries[8], current_row  = create_textarea_widget(self.secondary_window_modify_json, '防守', self.json_data,
                                8, current_row, 0, True)
         entries[9], current_row  = create_textarea_widget(self.secondary_window_modify_json, '作战数', self.json_data,
-                               9, current_row, 0, True)
+                               9, current_row, 0, True)'''
         entries[1], current_row = create_textarea_widget(self.secondary_window_modify_json, '天数（第x天）', self.json_data,
                                                          1, current_row, 0, True)
         combobox_vars[11], current_row = create_combobox_widget(self.secondary_window_modify_json, '地图',
@@ -138,22 +165,11 @@ class AppGUI:
                                                                  self.json_data,
                                                                  '拟人', current_row, 0, plants)
 
-        onekey_cheat_button = tk.Button(self.secondary_window_modify_json, text="一键修改", command=lambda: self.onekey_cheat(entries, radiobutton_vars, checkbox_vars,
-                                                                            combobox_vars))
-        onekey_cheat_button.grid(row=current_row, column=0, columnspan = column_span, sticky=tk.W+tk.E)
+        checkbox_vars['打败boss'], current_row = create_checkboxes_widget(self.secondary_window_modify_json, '通关模式',
+                                                                      self.json_data,
+                                                                      '打败boss', current_row, 0, achievements)
 
-        apply_button = tk.Button(self.secondary_window_modify_json, text="应用修改",
-                                 command=lambda: self.apply_changes_to_json(entries, radiobutton_vars, checkbox_vars,
-                                                                            combobox_vars))
-        apply_button.grid(row=current_row, column=2, columnspan = column_span, sticky=tk.W + tk.E)
-
-        combined_button = tk.Button(self.secondary_window_modify_json, text="保存并重启游戏", command=lambda: self.save_and_restart(entries, radiobutton_vars, checkbox_vars,
-                                                                            combobox_vars))
-        combined_button.grid(row=current_row, column=4, columnspan = column_span,sticky=tk.W + tk.E)
-
-        cancel_button = tk.Button(self.secondary_window_modify_json, text="取消",
-                               command=self.secondary_window_modify_json.destroy)
-        cancel_button.grid(row=current_row, column=6, columnspan = column_span,sticky=tk.W + tk.E)
+        #print_layout(self.secondary_window_modify_json)
     def onekey_cheat(self, entries, radiobutton_vars, checkbox_vars,combobox_vars):
         entries['尸首数'][0].delete(0, tk.END)
         entries['尸首数'][0].insert(0, '99999')
@@ -162,7 +178,7 @@ class AppGUI:
         entries[3][0].delete(0, tk.END)
         entries[3][0].insert(0, '99999')
         entries[4][0].delete(0, tk.END)
-        entries[4][0].insert(0, '13')
+        entries[4][0].insert(0, '17')
         entries[5][0].delete(0, tk.END)
         entries[5][0].insert(0, '99999')
         for checkbox_var_key, checkbox_var_value in checkbox_vars.items():
@@ -222,40 +238,43 @@ class AppGUI:
 
         # updated json_data
         self.json_data = json_data
-        self.log_action('Apply Update Success', '')
+        self.log_action('应用修改成功', '')
 
     def save_and_restart(self, entries, radiobutton_vars, checkbox_vars, combobox_vars):
         self.apply_changes_to_json(entries, radiobutton_vars, checkbox_vars, combobox_vars)
         self.replace_data_restart()
     def decode_json(self):
         try:
+            for warning in conf_warnings:
+                if warning:
+                    self.log_action(warning, "")
             input_file = os.path.join(self.input_directory.get(), self.input_file_combobox.get())
 
             with open(input_file, 'r', encoding='utf-8') as f:
                 encoded_data = f.read()
             decoded_data = json.loads(encoded_data)
             self.json_data = decoded_data
-            self.log_action('Decode Success:', input_file)
+            self.log_action('解析存档成功:', input_file)
 
         except Exception as e:
-            self.log_action('Decode/Error', str(e))
+            self.log_action('解析存档错误，请检查是否开启了新存档（不包括我是僵尸/测试模式）\n', str(e))
 
     def save_decoded_json(self):
         if not self.json_data:
             try:
                 self.decode_json()
             except Exception as e:
-                self.log_action('Save_decoded_json-decode error', str(e))
+                self.log_action('保存存档失败：未解析存档文件', str(e))
         else:
             try:
                 decode_output_file = os.path.join(self.decodeoutput_directory.get(), self.decodeoutput_file_combobox.get())
                 with open(decode_output_file, 'w', encoding='utf-8') as f:
                     json.dump(self.json_data, f, ensure_ascii=False, indent=4)
-                self.log_action('Save decoded json success', decode_output_file)
+                self.log_action('保存存档成功', decode_output_file)
                 # 使用默认程序打开JSON文件
                 os.startfile(decode_output_file)
             except Exception as e:
-                self.log_action('Save_decoded_json-save error', str(e))
+                self.log_action('保存存档失败', str(e))
 
     def backup_input_json(self):
         try:
@@ -336,7 +355,7 @@ class AppGUI:
         try:
             restart_executable(pvz_rouge_path)
         except Exception as e:
-            self.log_action('Restart Error', str(e))
+            self.log_action('自动重启游戏失败，请检查路径是否正确（不影响存档修改）', str(e))
 
     def log_action(self, action, file_path):
         current_time = datetime.now().strftime("%m-%d %H:%M:%S")
